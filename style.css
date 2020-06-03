@@ -1,0 +1,173 @@
+@import 'compass/css3';
+
+@function getBaseCtAngle($n: 3) { @return 360deg/$n }
+
+@function getVertexAngle($n: 3) { @return ($n - 2)*180deg/$n }
+
+@function getIRadius($ba, $l: 1) { @return .5*$l/tan(.5*$ba) }
+
+@function getCRadius($ba, $l: 1) { @return .5*$l/sin(.5*$ba) }
+
+@function getHeight($ri, $rc, $n: 3) { @return $ri + if($n%2 > 0, $rc, $ri) }
+
+@function toDeg($rad) { @return $rad*180deg/pi() }
+
+@function hypot($c0, $c1, $sgn: 1) { @return sqrt(pow($c0, 2) + $sgn*pow($c1, 2)) }
+
+$n3gon: 3;
+$ba3gon: getBaseCtAngle();
+$va3gon: getVertexAngle();
+$rc3gon: getCRadius($ba3gon);
+$ri3gon: getIRadius($ba3gon);
+$h3gon: getHeight($ri3gon, $rc3gon);
+$d3gon: .5*$h3gon - $ri3gon;
+
+$n5gon: 5;
+$ba5gon: getBaseCtAngle(5);
+$rc5gon: getCRadius($ba5gon);
+$ri5gon: getIRadius($ba5gon);
+
+$axo20hedron: toDeg(asin($ri5gon/$h3gon));
+$axi20hedron: toDeg(asin(($rc5gon - $ri5gon)/$h3gon));
+$hi20hedron: $h3gon*cos($axi20hedron);
+$rm20hedron: hypot(.5*$hi20hedron, $ri5gon);
+$ri20hedron: hypot($rm20hedron, $ri3gon, -1);
+
+$be: 2px;
+$bv: $be/sin(.5*$va3gon);
+$gv: 0px;
+$gh: $gv/cos(.5*$va3gon);
+
+$l: 2.5em;
+$t: 8s;
+$ease-out-quint: cubic-bezier(.22, 1, .36, 1);
+
+*, ::before, ::after {
+	box-sizing: inherit;
+	margin: 0;
+}
+
+body {
+	box-sizing: border-box;
+	height: 100vh;
+	perspective: 35em;
+	background: #262626;
+}
+
+div {
+	position: absolute;
+	transform-style: preserve-3d
+}
+
+.a3d {
+	--l: calc(var(--n-rows)*#{$l} + (var(--n-rows) + 0)*#{$gh});
+	--ri3d: calc(#{$ri20hedron}*var(--l));
+	top: 50%; left: 50%
+}
+
+.glass {
+	box-sizing: content-box;
+	border: solid .25*$l transparent;
+	width: var(--ri3d); height: var(--ri3d);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	box-shadow: 0 0 .5*$l #fee125;
+	background: radial-gradient(#{at 35% 35%}, #fee125, #e05005) border-box;
+	filter: blur(2px);
+	
+	&::before, &::after {
+		position: absolute;
+		top: 0; right: 0; bottom: 0; left: 0;
+		border-radius: 50%;
+		filter: blur(5px);
+		content: ''
+	}
+	
+	&::before {
+		bottom: 30%;
+		border-radius: 50%/ 59% 59% 41% 41%;
+		transform: scalex(.87);
+		background: linear-gradient(rgba(#fff, .27), rgba(#fff, .05))
+	}
+	
+	&::after {
+		box-shadow: inset 0 -4rem 1px -3.5rem rgba(#fff, .35);
+	}
+}
+
+.s20hedron {
+	animation: rot $t linear infinite;
+	
+	&__face {
+		--i: 1;
+		--sgn-i: calc(2*var(--i) - 1);
+		--e: 0;
+		--not-e: calc(1 - var(--e));
+		--dif-ie: calc(var(--i) - var(--e));
+		--xor-ie: calc(var(--dif-ie)*var(--dif-ie));
+		--sgn-xor: calc(1 - 2*var(--xor-ie));
+		--dc3gon: calc(2*var(--l)*#{$rc3gon});
+		--d-perc: calc(var(--sgn-xor)*(.5 + var(--e))*13%);
+		--c0: HSL(40, calc(90% - var(--d-perc)), calc(61% + var(--d-perc)));
+		display: grid;
+		grid-gap: $gv $gh;
+		place-content: start center;
+		width: var(--dc3gon); height: var(--dc3gon);
+		transform: 
+			translate(-50%, -50%)
+			rotatey(calc(var(--j)*.5*#{$ba5gon}))
+			rotatex(calc(var(--sgn-xor)*(var(--e)*#{$axo20hedron} + var(--not-e)*#{$axi20hedron}))) 
+			translatez(var(--ri3d))
+			scaley(var(--sgn-i));
+		color: HSL(319, calc(75% - var(--d-perc)), calc(50% + var(--d-perc)));
+		
+		@for $j from 0 to 5 {
+			&:nth-child(5n + #{$j + 1}) { --j: calc(2*#{$j} + var(--xor-ie)) }
+		}
+		
+		&:nth-child(-n + 5), &:nth-child(n + 16) { --e: 1 }
+				
+		&:nth-child(n + 6):nth-child(-n + 10), &:nth-child(n + 16) { --i: 0 }
+	}
+}
+
+@keyframes rot { to { transform: rotatey(1turn) } }
+
+.s3gon {
+	grid-column: var(--cidx);
+	position: initial;
+	margin: 0 #{-.25*$l};
+	border: solid $be var(--c0);
+	width: $l; height: $h3gon*$l;
+	--dir: rotate(calc((var(--ridx) + var(--cidx) + var(--n-rows) - 1)*.5turn));
+	transform: var(--dir);
+	background: 
+			conic-gradient(from 180deg - .5*$va3gon at 50% $bv, 
+				currentcolor 0% $va3gon, transparent 0)
+			50% 0/100% calc(100% - #{$be})
+			var(--c0);
+		--poly: polygon(50% 0, 100% 100%, 0 100%);
+	-webkit-clip-path: var(--poly);
+					clip-path: var(--poly);
+	--dt: calc((2*var(--cidx)/var(--n-cols) + var(--j))/10*#{-$t});
+	animation: inv $t ease-out var(--dt) infinite, 
+			vis .5*$t linear var(--dt) infinite alternate
+}
+
+@keyframes inv {
+	10% {
+		transform: var(--dir) 
+			translatey($d3gon*$l) 
+			rotate(.5*$ba3gon) scale(.125) 
+			translatey(-$d3gon*$l);
+		animation-timing-function: ease-out
+	}
+	20%, 100% {
+		transform: var(--dir) 
+			translatey($d3gon*$l) 
+			rotate($ba3gon) scale(1) 
+			translatey(-$d3gon*$l)
+	}
+}
+
+@keyframes vis { to { opacity: .05 } }
