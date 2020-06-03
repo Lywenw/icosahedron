@@ -1,0 +1,24 @@
+- let n_rows = 4;
+- let n_cols = 2*n_rows - 1;
+- let n_cells = Math.pow(n_rows, 2);
+
+style
+	| .a3d { --n-rows: #{n_rows}; --n-cols: #{n_cols}; --ridx: 1; --cidx: #{n_rows} }
+	- for(let i = 1; i < n_rows; i++) {
+		- let c_idx_inf = i, c_idx_sup = n_cols - i + 1;
+		- let i_idx_inf = [], i_idx_sup = [];
+		- for(let j = 0; j < i; j++) {
+			- i_idx_inf.push(Math.pow(n_rows - j - 1, 2) + i - j);
+			- i_idx_sup.push(Math.pow(n_rows - j, 2) - i + j + 1);
+		- }
+		| .s3gon:nth-child(n + #{i*i + 1}) { --ridx: #{i + 1} }
+		| #{i_idx_inf.map(c => `.s3gon:nth-child(${c})`).join(',')} { --cidx: #{c_idx_inf} }
+		| #{i_idx_sup.map(c => `.s3gon:nth-child(${c})`).join(',')} { --cidx: #{c_idx_sup} }
+	- }
+.a3d
+	.glass
+	.s20hedron
+		- for(let i = 0; i < 20; i++)
+			.s20hedron__face
+				- for(let j = 0; j < n_cells; j++)
+					.s3gon
